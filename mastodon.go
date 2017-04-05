@@ -1,5 +1,9 @@
 package toot
 
+import (
+	"strings"
+)
+
 type Account struct {
 	Id             string `json:"id"`
 	Username       string `json:"username"`
@@ -14,4 +18,28 @@ type Account struct {
 	FollowersCount int    `json:"followers_count"`
 	FollowingCount int    `json:"following_count"`
 	StatusesCount  int    `json:"statuses_count"`
+}
+
+type Scope struct {
+	Read   bool
+	Write  bool
+	Follow bool
+}
+
+func (s Scope) String() string {
+	scopes := []string{}
+
+	if s.Read {
+		scopes = append(scopes, "read")
+	}
+
+	if s.Write {
+		scopes = append(scopes, "write")
+	}
+
+	if s.Follow {
+		scopes = append(scopes, "follow")
+	}
+
+	return strings.Join(scopes, " ")
 }
