@@ -1,4 +1,4 @@
-package mastodon
+package toot
 
 type Account struct {
 	Id             string `json:"id"`
