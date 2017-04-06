@@ -1,6 +1,10 @@
 package toot
 
 import (
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
@@ -42,4 +46,33 @@ func (s Scope) String() string {
 	}
 
 	return strings.Join(scopes, " ")
+}
+
+type AppRequest struct {
+	ClientName   string `json:"client_name"`
+	Scopes       string `json:"scopes"`
+	RedirectUris string `json:"redirect_uris"`
+}
+
+func NewApp(name string, scope Scope) {
+	url := "https://cmpwn.com/api/v1/apps"
+
+	r := AppRequest{
+		ClientName:   name,
+		Scopes:       scope.String(),
+		RedirectUris: "urn:ietf:wg:oauth:2.0:oob",
+	}
+
+	jsonStr, _ := json.Marshal(r)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
 }
