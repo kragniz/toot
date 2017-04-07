@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"fmt"
 )
 
 type Account struct {
@@ -137,7 +135,6 @@ func (c *Client) Login(username, password string, scope Scope) *Client {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(body))
 
 	login := loginResponse{}
 	json.Unmarshal(body, &login)
@@ -145,4 +142,33 @@ func (c *Client) Login(username, password string, scope Scope) *Client {
 	c.AccessToken = login.AccessToken
 
 	return c
+}
+
+type statusRequest struct {
+	Status       string `json:"status"`
+	Password     string `json:"password"`
+	Scope        string `json:"scope"`
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	GrantType    string `json:"grant_type"`
+}
+
+func (c *Client) Toot(status string) {
+	url := c.Url + "/api/v1/statuses"
+
+	r := statusRequest{
+		Status: status,
+	}
+
+	jsonStr, _ := json.Marshal(r)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.AccessToken)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
 }
