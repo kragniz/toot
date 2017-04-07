@@ -54,7 +54,12 @@ type AppRequest struct {
 	RedirectUris string `json:"redirect_uris"`
 }
 
-func NewApp(name string, scope Scope) {
+type App struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+}
+
+func NewApp(name string, scope Scope) App {
 	url := "https://cmpwn.com/api/v1/apps"
 
 	r := AppRequest{
@@ -75,4 +80,9 @@ func NewApp(name string, scope Scope) {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
+
+	app := App{}
+	json.Unmarshal(body, &app)
+
+	return app
 }
