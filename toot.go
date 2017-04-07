@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"fmt"
 )
 
 type Account struct {
@@ -22,6 +24,12 @@ type Account struct {
 	FollowersCount int    `json:"followers_count"`
 	FollowingCount int    `json:"following_count"`
 	StatusesCount  int    `json:"statuses_count"`
+}
+
+type Client struct {
+	Url         string
+	App         App
+	AccessToken string
 }
 
 type Scope struct {
@@ -59,8 +67,8 @@ type App struct {
 	ClientSecret string `json:"client_secret"`
 }
 
-func NewApp(name string, scope Scope) App {
-	url := "https://cmpwn.com/api/v1/apps"
+func (c *Client) NewApp(name string, scope Scope) App {
+	url := c.Url + "/api/v1/apps"
 
 	r := appRequest{
 		ClientName:   name,
@@ -84,5 +92,57 @@ func NewApp(name string, scope Scope) App {
 	app := App{}
 	json.Unmarshal(body, &app)
 
+	c.App = app
+
 	return app
+}
+
+type loginRequest struct {
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	Scope        string `json:"scope"`
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	GrantType    string `json:"grant_type"`
+}
+
+type loginResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	Scope       string `json:"scope"`
+	CreatedAt   int    `json:"created_at"`
+}
+
+func (c *Client) Login(username, password string, scope Scope) *Client {
+	url := c.Url + "/oauth/token"
+
+	r := loginRequest{
+		Username:     username,
+		Password:     password,
+		Scope:        scope.String(),
+		ClientID:     c.App.ClientID,
+		ClientSecret: c.App.ClientSecret,
+		GrantType:    "password",
+	}
+
+	jsonStr, _ := json.Marshal(r)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
+
+	login := loginResponse{}
+	json.Unmarshal(body, &login)
+
+	c.AccessToken = login.AccessToken
+
+	return c
 }
