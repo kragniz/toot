@@ -48,7 +48,7 @@ func (s Scope) String() string {
 	return strings.Join(scopes, " ")
 }
 
-type AppRequest struct {
+type appRequest struct {
 	ClientName   string `json:"client_name"`
 	Scopes       string `json:"scopes"`
 	RedirectUris string `json:"redirect_uris"`
@@ -62,7 +62,7 @@ type App struct {
 func NewApp(name string, scope Scope) App {
 	url := "https://cmpwn.com/api/v1/apps"
 
-	r := AppRequest{
+	r := appRequest{
 		ClientName:   name,
 		Scopes:       scope.String(),
 		RedirectUris: "urn:ietf:wg:oauth:2.0:oob",
